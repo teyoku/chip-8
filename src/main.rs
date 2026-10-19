@@ -1,3 +1,4 @@
+pub mod chip8;
 pub mod memory;
 use std::{error::Error, fs};
 
