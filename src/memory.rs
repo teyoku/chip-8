@@ -36,7 +36,7 @@ impl Memory {
         self.data[address as usize] = value;
     }
 
-    pub fn read_byte(&self, address: u16) -> Option<u8> {
-        self.data.get(address as usize).copied()
+    pub fn read_byte(&self, address: u16) -> u8 {
+        self.data[address as usize]
     }
 }
