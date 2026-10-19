@@ -1,3 +1,4 @@
+pub mod memory;
 use std::{error::Error, fs};
 
 fn main() -> Result<(), Box<dyn Error>> {
