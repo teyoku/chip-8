@@ -4,7 +4,7 @@ pub const PROGRAM_START_OFFSET: usize = 0x200;
 
 pub struct Chip8 {
     memory: Memory,
-    cpu: Cpu
+    cpu: Cpu,
 }
 
 impl Chip8 {
