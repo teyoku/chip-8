@@ -22,6 +22,12 @@ impl Chip8 {
         }
     }
 
+    pub fn run(&mut self) {
+        let opcode = self.fetch_opcode();
+
+        self.cpu.execute(opcode, &mut self.memory);
+    }
+
     fn fetch_opcode(&self) -> u16 {
         let pc = self.cpu.pc;
         let high = self.memory.read_byte(pc);

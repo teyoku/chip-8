@@ -16,4 +16,10 @@ impl Cpu {
             pc: PROGRAM_START_OFFSET as u16,
         }
     }
+
+    pub fn execute(&mut self, opcode: u16, memory: &mut Memory) {
+        self.pc += 2;
+
+        // ...
+    }
 }
