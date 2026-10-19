@@ -2,9 +2,13 @@ pub mod chip8;
 pub mod memory;
 use std::{error::Error, fs};
 
+use crate::chip8::Chip8;
+
 fn main() -> Result<(), Box<dyn Error>> {
-    let contents = fs::read("data/BRIX")?;
-    println!("Bytes: {contents:?}");
+    let data = fs::read("data/BRIX")?;
+
+    let mut chip8 = Chip8::new();
+    chip8.load_rom(&data);
 
     Ok(())
 }
