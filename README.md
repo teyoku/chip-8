@@ -3,6 +3,12 @@
 A CHIP-8 emulator written in Rust. It uses a 64×32 display and maps the CHIP-8
 hex keypad to a QWERTY keyboard.
 
+<p align="center">
+  <img src="assets/chip8-demo.gif" width="512" alt="CHIP-8 emulator running the included MAZE ROM">
+</p>
+
+<p align="center"><sub>The included <code>MAZE</code> ROM running in the emulator</sub></p>
+
 ## Requirements
 
 - Rust and Cargo (installable with [rustup](https://rustup.rs/))
