@@ -1,3 +1,5 @@
+use rand::RngExt;
+
 use crate::{chip8::PROGRAM_START, memory::Memory, window::Window};
 
 const NUM_REGISTERS: usize = 16;
@@ -138,12 +140,18 @@ impl Cpu {
                 ProgramCounter::Next
             }
             // 9XY0 - SNE Vx, Vy
-            (0x9, _, _, 0x0) => {
-                ProgramCounter::skip_if(self.v[x] != self.v[y])
-            }
+            (0x9, _, _, 0x0) => ProgramCounter::skip_if(self.v[x] != self.v[y]),
             // ANNN - load NNN into I
             (0xA, _, _, _) => {
                 self.i = nnn;
+                ProgramCounter::Next
+            }
+            // BNNN - goto NNN + V0
+            (0xB, _, _, _) => ProgramCounter::Jump(nnn + (self.v[0] as u16)),
+            // CXNN - random number
+            (0xC, _, _, _) => {
+                let mut rng = rand::rng();
+                self.v[x] = rng.random::<u8>() & nn;
                 ProgramCounter::Next
             }
             _ => ProgramCounter::Next,
