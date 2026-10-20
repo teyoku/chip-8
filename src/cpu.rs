@@ -10,6 +10,7 @@ enum ProgramCounter {
     Next,
     Skip,
     Jump(u16),
+    Hold,
 }
 
 impl ProgramCounter {
@@ -28,6 +29,8 @@ pub struct Cpu {
     pub pc: u16,                // Program Counter
     pub stack: [u16; STACK_SIZE],
     pub sp: u16,
+    pub delay_timer: u8,
+    pub sound_timer: u8,
 }
 
 impl Cpu {
@@ -38,7 +41,15 @@ impl Cpu {
             pc: PROGRAM_START as u16,
             stack: [0; STACK_SIZE],
             sp: 0,
+            delay_timer: 0,
+            sound_timer: 0,
         }
+    }
+
+    pub(crate) fn tick_timers(&mut self, ticks: u64) {
+        let ticks = ticks.min(u8::MAX as u64) as u8;
+        self.delay_timer = self.delay_timer.saturating_sub(ticks);
+        self.sound_timer = self.sound_timer.saturating_sub(ticks);
     }
 
     pub fn execute(&mut self, opcode: u16, memory: &mut Memory, window: &mut Window) {
@@ -166,6 +177,25 @@ impl Cpu {
             (0xE, _, 0x9, 0xE) => ProgramCounter::skip_if(window.is_chip8_key_down(self.v[x])),
             // EXA1 - SKNP Vx
             (0xE, _, 0xA, 0x1) => ProgramCounter::skip_if(!window.is_chip8_key_down(self.v[x])),
+            // FX07 - LD Vx, delay timer
+            (0xF, _, 0x0, 0x7) => {
+                self.v[x] = self.delay_timer;
+                ProgramCounter::Next
+            }
+            // FX0A - wait for a key press, then store it in Vx
+            (0xF, _, 0x0, 0xA) => {
+                if let Some(key) = window.pressed_chip8_key() {
+                    self.v[x] = key;
+                    ProgramCounter::Next
+                } else {
+                    ProgramCounter::Hold
+                }
+            }
+            // FX15 - LD delay timer, Vx
+            (0xF, _, 0x1, 0x5) => {
+                self.delay_timer = self.v[x];
+                ProgramCounter::Next
+            }
             _ => ProgramCounter::Next,
         };
 
@@ -173,6 +203,29 @@ impl Cpu {
             ProgramCounter::Next => self.pc += OPCODE_SIZE,
             ProgramCounter::Skip => self.pc += 2 * OPCODE_SIZE,
             ProgramCounter::Jump(addr) => self.pc = addr,
+            ProgramCounter::Hold => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Cpu;
+
+    #[test]
+    fn timers_count_down_without_underflow() {
+        let mut cpu = Cpu::new();
+        cpu.delay_timer = 3;
+        cpu.sound_timer = 1;
+
+        cpu.tick_timers(1);
+
+        assert_eq!(cpu.delay_timer, 2);
+        assert_eq!(cpu.sound_timer, 0);
+
+        cpu.tick_timers(10);
+
+        assert_eq!(cpu.delay_timer, 0);
+        assert_eq!(cpu.sound_timer, 0);
     }
 }
