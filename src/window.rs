@@ -21,7 +21,7 @@ impl Window {
                 ..WindowOptions::default()
             },
         )?;
-        win.set_target_fps(20);
+        win.set_target_fps(60);
 
         Ok(Self {
             win,
@@ -71,7 +71,7 @@ impl Window {
     }
 
     pub fn is_key_down(&self, key: Key) -> bool {
-        self.is_key_down(key)
+        self.win.is_key_down(key)
     }
 
     pub fn is_open(&self) -> bool {
