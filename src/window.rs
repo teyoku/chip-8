@@ -56,6 +56,13 @@ impl Window {
         keys
     }
 
+    pub fn is_chip8_key_down(&self, key: u8) -> bool {
+        self.handle_key_events()
+            .get(key as usize)
+            .copied()
+            .unwrap_or(false)
+    }
+
     pub fn is_key_down(&self, key: Key) -> bool {
         self.is_key_down(key)
     }
