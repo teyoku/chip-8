@@ -50,9 +50,7 @@ impl Cpu {
 
         let pc_change = match (c, x, y, n) {
             // 1NNN - goto NNN
-            (0x1, _, _, _) => {
-                ProgramCounter::Jump(nnn)
-            }
+            (0x1, _, _, _) => ProgramCounter::Jump(nnn),
             // 2NNN - call NNN
             (0x2, _, _, _) => {
                 self.stack[self.sp as usize] = self.pc;
