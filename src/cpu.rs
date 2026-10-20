@@ -196,6 +196,22 @@ impl Cpu {
                 self.delay_timer = self.v[x];
                 ProgramCounter::Next
             }
+            // FX18 - LD sound timer, Vx
+            (0xF, _, 0x1, 0x8) => {
+                self.sound_timer = self.v[x];
+                ProgramCounter::Next
+            }
+            // FX1E - ADD I, Vx
+            (0xF, _, 0x1, 0xE) => {
+                self.i += self.v[x] as u16;
+                self.v[0xF] = if self.i > 0x0F00 { 1 } else { 0 };
+                ProgramCounter::Next
+            }
+            // FX33 - LD, B, Vx
+            (0xF, _, 0x3, 0x3) => {
+                self.i = (self.v[x] as u16) * 5;
+                ProgramCounter::Next
+            }
             _ => ProgramCounter::Next,
         };
 
