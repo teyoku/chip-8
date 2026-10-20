@@ -96,6 +96,22 @@ impl Cpu {
                 self.v[x] ^= self.v[y];
                 ProgramCounter::Next
             }
+            // 8XY4 - add Vy to Vx
+            (0x8, _, _, 0x4) => {
+                let vx = self.v[x] as u16;
+                let vy = self.v[y] as u16;
+                let result = vx + vy;
+                self.v[x] = result as u8;
+                self.v[0xF] = if result > 0xFF { 1 } else { 0 };
+
+                ProgramCounter::Next
+            }
+            // 8XY5 - sub Vy from Vx
+            (0x8, _, _, 0x5) => {
+                self.v[0xF] = if self.v[x] > self.v[y] { 1 } else { 0 };
+                self.v[x] = self.v[x].wrapping_sub(self.v[y]);
+                ProgramCounter::Next
+            }
             // ANNN - load NNN into I
             (0xA, _, _, _) => {
                 self.i = nnn;
