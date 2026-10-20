@@ -164,6 +164,8 @@ impl Cpu {
             }
             // EX9E - SKP Vx
             (0xE, _, 0x9, 0xE) => ProgramCounter::skip_if(window.is_chip8_key_down(self.v[x])),
+            // EXA1 - SKNP Vx
+            (0xE, _, 0xA, 0x1) => ProgramCounter::skip_if(!window.is_chip8_key_down(self.v[x])),
             _ => ProgramCounter::Next,
         };
 
