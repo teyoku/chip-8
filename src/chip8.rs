@@ -1,18 +1,26 @@
-use crate::{cpu::Cpu, memory::{MEMORY_SIZE, Memory}};
+use std::error::Error;
+
+use crate::{
+    cpu::Cpu,
+    memory::{MEMORY_SIZE, Memory},
+    window::Window,
+};
 
 pub const PROGRAM_START: usize = 0x200;
 
 pub struct Chip8 {
     memory: Memory,
     cpu: Cpu,
+    window: Window,
 }
 
 impl Chip8 {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
             memory: Memory::new(),
             cpu: Cpu::new(),
-        }
+            window: Window::new("CHIP-8 Emulator")?,
+        })
     }
 
     pub fn load_rom(&mut self, data: &[u8]) -> Result<(), &str> {
