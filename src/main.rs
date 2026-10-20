@@ -8,7 +8,7 @@ use std::{error::Error, fs};
 use crate::chip8::Chip8;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let data = fs::read("data/BRIX")?;
+    let data = fs::read("data/IBM Logo")?;
 
     let mut chip8 = Chip8::new()?;
     chip8.load_rom(&data)?;
