@@ -43,8 +43,8 @@ impl Cpu {
 
     pub fn execute(&mut self, opcode: u16, memory: &mut Memory, window: &mut Window) {
         let c = ((opcode & 0xF000) >> 12) as u8; // Instruction category
-        let x = (opcode & 0x0F00 >> 8) as usize; // Vx register index
-        let y = (opcode & 0x00F0 >> 4) as usize; // Vy register index
+        let x = ((opcode & 0x0F00) >> 8) as usize; // Vx register index
+        let y = ((opcode & 0x00F0) >> 4) as usize; // Vy register index
         let n = (opcode & 0x000F) as u8; // 4-bit const
 
         let nn = (opcode & 0x00FF) as u8; // 8-bit const
@@ -152,6 +152,14 @@ impl Cpu {
             (0xC, _, _, _) => {
                 let mut rng = rand::rng();
                 self.v[x] = rng.random::<u8>() & nn;
+                ProgramCounter::Next
+            }
+            // DXYN - draw N-byte sprite at (Vx, Vy), setting VF on collision
+            (0xD, _, _, _) => {
+                let sprite: Vec<u8> = (0..n)
+                    .map(|row| memory.read_byte(self.i + row as u16))
+                    .collect();
+                self.v[0xF] = window.draw(self.v[x] as usize, self.v[y] as usize, &sprite);
                 ProgramCounter::Next
             }
             _ => ProgramCounter::Next,
