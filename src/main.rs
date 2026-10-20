@@ -1,6 +1,6 @@
 pub mod chip8;
 pub mod cpu;
-pub mod display;
+pub mod window;
 pub mod memory;
 
 use std::{error::Error, fs};
