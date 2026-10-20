@@ -39,7 +39,7 @@ impl Chip8 {
     pub fn run(&mut self) {
         let opcode = self.fetch_opcode();
 
-        self.cpu.execute(opcode, &mut self.memory);
+        self.cpu.execute(opcode, &mut self.memory, &mut self.window);
     }
 
     fn fetch_opcode(&self) -> u16 {
