@@ -162,6 +162,8 @@ impl Cpu {
                 self.v[0xF] = window.draw(self.v[x] as usize, self.v[y] as usize, &sprite);
                 ProgramCounter::Next
             }
+            // EX9E - SKP Vx
+            (0xE, _, 0x9, 0xE) => ProgramCounter::skip_if(window.is_chip8_key_down(self.v[x])),
             _ => ProgramCounter::Next,
         };
 
