@@ -1,6 +1,8 @@
-pub mod cpu;
 pub mod chip8;
+pub mod cpu;
+pub mod display;
 pub mod memory;
+
 use std::{error::Error, fs};
 
 use crate::chip8::Chip8;
