@@ -1,4 +1,5 @@
 pub const MEMORY_SIZE: usize = 4096;
+pub const FONT_START: u16 = 0x050;
 const FONTSET: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -27,7 +28,8 @@ impl Memory {
         let mut memory = Self {
             data: [0; MEMORY_SIZE],
         };
-        memory.data[0x050..0x0A0].copy_from_slice(&FONTSET);
+        memory.data[FONT_START as usize..FONT_START as usize + FONTSET.len()]
+            .copy_from_slice(&FONTSET);
 
         memory
     }
