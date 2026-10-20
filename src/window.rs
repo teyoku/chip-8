@@ -1,40 +1,65 @@
+use minifb::{Key, Scale, WindowOptions};
+
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
+const PX_OFF: u32 = 0x81c784;
+const PX_ON: u32 = 0x29302a;
 
 pub struct Window {
-    pixels: [bool; WIDTH * HEIGHT],
+    win: minifb::Window,
+    framebuffer: [u32; WIDTH * HEIGHT],
 }
 
-impl Display {
-    pub fn new() -> Self {
-        Self {
-            pixels: [false; WIDTH * HEIGHT],
-        }
+impl Window {
+    pub fn new(title: &str) -> Result<Self, minifb::Error> {
+        let mut win = minifb::Window::new(
+            title,
+            WIDTH,
+            HEIGHT,
+            WindowOptions {
+                scale: Scale::X8,
+                ..WindowOptions::default()
+            },
+        )?;
+        win.set_target_fps(20);
+
+        Ok(Self {
+            win,
+            framebuffer: [PX_OFF; WIDTH * HEIGHT],
+        })
+    }
+
+    pub fn is_key_down(&self, key: Key) -> bool {
+        self.is_key_down(key)
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.win.is_open()
     }
 
     pub fn clear(&mut self) {
-        self.pixels.fill(false);
+        self.framebuffer.fill(PX_OFF);
     }
 
-    pub fn draw_sprite(&mut self, start_x: usize, start_y: usize, sprite: &[u8]) -> bool {
-        let mut collision = false;
-        let sprite_height = sprite.len();
+    pub fn draw(&mut self, start_x: usize, start_y: usize, sprite: &[u8]) -> u8 {
+        let mut collision = 0;
 
-        for (row, sprite_byte) in (0..sprite_height).enumerate() {
+        for (row, sprite_byte) in sprite.iter().enumerate() {
             for col in 0..8 {
-                let bit = (sprite_byte >> (7 - col)) & 1;
+                let x = (start_x + col) % WIDTH;
+                let y = (start_y + row) % HEIGHT;
+                let index = y * WIDTH + x;
+                let is_old_set = self.framebuffer[index] == PX_ON;
 
-                if bit == 1 {
-                    let x = (start_x + col) % WIDTH;
-                    let y = (start_y + row) % HEIGHT;
-                    let index = y * WIDTH + x;
-
-                    if self.pixels[index] {
-                        collision = true;
-                        self.pixels[index] = false;
+                self.framebuffer[index] = if is_bit_set(sprite_byte, (8 - col - 1) as u8) {
+                    if is_old_set {
+                        collision = 1;
+                        PX_OFF
                     } else {
-                        self.pixels[index] = true;
+                        PX_ON
                     }
+                } else {
+                    self.framebuffer[index]
                 }
             }
         }
@@ -42,14 +67,13 @@ impl Display {
         collision
     }
 
-    pub fn flush_to_buffer(
-        &self,
-        buffer: &mut [u32; WIDTH * HEIGHT],
-        fg_color: u32,
-        bg_color: u32,
-    ) {
-        for (i, &pixel_on) in self.pixels.iter().enumerate() {
-            buffer[i] = if pixel_on { fg_color } else { bg_color };
-        }
+    pub fn refresh(&mut self) -> Result<(), minifb::Error> {
+        self.win
+            .update_with_buffer(&self.framebuffer, WIDTH, HEIGHT)?;
+        Ok(())
     }
+}
+
+fn is_bit_set(byte: &u8, n: u8) -> bool {
+    byte & (1 << n) != 0
 }
