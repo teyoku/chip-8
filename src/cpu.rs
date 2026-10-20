@@ -131,6 +131,16 @@ impl Cpu {
                 self.v[x] = self.v[y].wrapping_sub(self.v[x]);
                 ProgramCounter::Next
             }
+            // 8XYE - SHL Vx {, Vy}
+            (0x8, _, _, 0xE) => {
+                self.v[0xF] = (self.v[x] & 0b10000000) >> 7;
+                self.v[x] <<= 1;
+                ProgramCounter::Next
+            }
+            // 9XY0 - SNE Vx, Vy
+            (0x9, _, _, 0x0) => {
+                ProgramCounter::skip_if(self.v[x] != self.v[y])
+            }
             // ANNN - load NNN into I
             (0xA, _, _, _) => {
                 self.i = nnn;
