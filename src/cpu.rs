@@ -1,6 +1,10 @@
 use rand::RngExt;
 
-use crate::{chip8::PROGRAM_START, memory::Memory, window::Window};
+use crate::{
+    chip8::PROGRAM_START,
+    memory::{FONT_START, Memory},
+    window::Window,
+};
 
 const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
@@ -76,7 +80,7 @@ impl Cpu {
             (0x1, _, _, _) => ProgramCounter::Jump(nnn),
             // 2NNN - call NNN
             (0x2, _, _, _) => {
-                self.stack[self.sp as usize] = self.pc;
+                self.stack[self.sp as usize] = self.pc + OPCODE_SIZE;
                 self.sp += 1;
                 ProgramCounter::Jump(nnn)
             }
@@ -128,7 +132,7 @@ impl Cpu {
             }
             // 8XY5 - sub Vy from Vx
             (0x8, _, _, 0x5) => {
-                self.v[0xF] = if self.v[x] > self.v[y] { 1 } else { 0 };
+                self.v[0xF] = if self.v[x] >= self.v[y] { 1 } else { 0 };
                 self.v[x] = self.v[x].wrapping_sub(self.v[y]);
                 ProgramCounter::Next
             }
@@ -140,7 +144,7 @@ impl Cpu {
             }
             // 8XY7 - SUBN Vx, Vy
             (0x8, _, _, 0x7) => {
-                self.v[0xF] = if self.v[y] > self.v[x] { 1 } else { 0 };
+                self.v[0xF] = if self.v[y] >= self.v[x] { 1 } else { 0 };
                 self.v[x] = self.v[y].wrapping_sub(self.v[x]);
                 ProgramCounter::Next
             }
@@ -158,7 +162,7 @@ impl Cpu {
                 ProgramCounter::Next
             }
             // BNNN - goto NNN + V0
-            (0xB, _, _, _) => ProgramCounter::Jump(nnn + (self.v[0] as u16)),
+            (0xB, _, _, _) => ProgramCounter::Jump(nnn.wrapping_add(self.v[0] as u16)),
             // CXNN - random number
             (0xC, _, _, _) => {
                 let mut rng = rand::rng();
@@ -203,19 +207,20 @@ impl Cpu {
             }
             // FX1E - ADD I, Vx
             (0xF, _, 0x1, 0xE) => {
-                self.i += self.v[x] as u16;
-                self.v[0xF] = if self.i > 0x0F00 { 1 } else { 0 };
+                let result = self.i as u32 + self.v[x] as u32;
+                self.v[0xF] = u8::from(result > 0x0FFF);
+                self.i = result as u16;
                 ProgramCounter::Next
             }
             // FX29 - LD, F, Vx
             (0xF, _, 0x2, 0x9) => {
-                self.i = (self.v[x] as u16) * 5;
+                self.i = FONT_START + (self.v[x] as u16) * 5;
                 ProgramCounter::Next
             }
             // FX33 - LD, B, Vx
             (0xF, _, 0x3, 0x3) => {
                 memory.write_byte(self.i, self.v[x] / 100);
-                memory.write_byte(self.i + 1, (self.v[x] % 100) / 00);
+                memory.write_byte(self.i + 1, (self.v[x] % 100) / 10);
                 memory.write_byte(self.i + 2, self.v[x] % 10);
                 ProgramCounter::Next
             }
