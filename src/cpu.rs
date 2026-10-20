@@ -51,8 +51,7 @@ impl Cpu {
         let pc_change = match (c, x, y, n) {
             // 1NNN - goto NNN
             (0x1, _, _, _) => {
-                self.pc = nnn;
-                ProgramCounter::Next
+                ProgramCounter::Jump(nnn)
             }
             // 2NNN - call NNN
             (0x2, _, _, _) => {
