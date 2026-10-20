@@ -1,6 +1,6 @@
-use crate::{cpu::Cpu, memory::Memory};
+use crate::{cpu::Cpu, memory::{MEMORY_SIZE, Memory}};
 
-pub const PROGRAM_START_OFFSET: usize = 0x200;
+pub const PROGRAM_START: usize = 0x200;
 
 pub struct Chip8 {
     memory: Memory,
@@ -15,11 +15,17 @@ impl Chip8 {
         }
     }
 
-    pub fn load_rom(&mut self, data: &[u8]) {
+    pub fn load_rom(&mut self, data: &[u8]) -> Result<(), &str> {
+        if PROGRAM_START + data.len() >= MEMORY_SIZE {
+            return Err("Out of memory: program too large");
+        }
+
         for (i, &value) in data.iter().enumerate() {
-            let address = (PROGRAM_START_OFFSET + i) as u16;
+            let address = (PROGRAM_START + i) as u16;
             self.memory.write_byte(address, value);
         }
+
+        Ok(())
     }
 
     pub fn run(&mut self) {
