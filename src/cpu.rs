@@ -1,4 +1,4 @@
-use crate::memory::Memory;
+use crate::{chip8::PROGRAM_START, memory::Memory};
 
 const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
@@ -33,7 +33,7 @@ impl Cpu {
         Self {
             v: [0; NUM_REGISTERS],
             i: 0,
-            pc: PROGRAM_START_OFFSET as u16,
+            pc: PROGRAM_START as u16,
             stack: [0; STACK_SIZE],
             sp: 0,
         }
@@ -50,7 +50,9 @@ impl Cpu {
 
         let pc_change = match (c, x, y, n) {
             // 1NNN - goto NNN
-            (0x1, _, _, _) => ProgramCounter::Jump(nnn),
+            (0x1, _, _, _) => {
+                ProgramCounter::Jump(nnn)
+            }
             // 2NNN - call NNN
             (0x2, _, _, _) => {
                 self.stack[self.sp as usize] = self.pc;
