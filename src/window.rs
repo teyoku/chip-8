@@ -69,29 +69,7 @@ impl Window {
     }
 
     pub fn draw(&mut self, start_x: usize, start_y: usize, sprite: &[u8]) -> u8 {
-        let mut collision = 0;
-
-        for (row, sprite_byte) in sprite.iter().enumerate() {
-            for col in 0..8 {
-                let x = (start_x + col) % WIDTH;
-                let y = (start_y + row) % HEIGHT;
-                let index = y * WIDTH + x;
-                let is_old_set = self.framebuffer[index] == PX_ON;
-
-                self.framebuffer[index] = if is_bit_set(sprite_byte, (8 - col - 1) as u8) {
-                    if is_old_set {
-                        collision = 1;
-                        PX_OFF
-                    } else {
-                        PX_ON
-                    }
-                } else {
-                    self.framebuffer[index]
-                }
-            }
-        }
-
-        collision
+        draw_sprite(&mut self.framebuffer, start_x, start_y, sprite)
     }
 
     pub fn refresh(&mut self) -> Result<(), minifb::Error> {
@@ -101,6 +79,67 @@ impl Window {
     }
 }
 
+fn draw_sprite(
+    framebuffer: &mut [u32; WIDTH * HEIGHT],
+    start_x: usize,
+    start_y: usize,
+    sprite: &[u8],
+) -> u8 {
+    let mut collision = 0;
+
+    for (row, sprite_byte) in sprite.iter().enumerate() {
+        for col in 0..8 {
+            let x = (start_x + col) % WIDTH;
+            let y = (start_y + row) % HEIGHT;
+            let index = y * WIDTH + x;
+            let is_old_set = framebuffer[index] == PX_ON;
+
+            framebuffer[index] = if is_bit_set(sprite_byte, (8 - col - 1) as u8) {
+                if is_old_set {
+                    collision = 1;
+                    PX_OFF
+                } else {
+                    PX_ON
+                }
+            } else {
+                framebuffer[index]
+            }
+        }
+    }
+
+    collision
+}
+
 fn is_bit_set(byte: &u8, n: u8) -> bool {
     byte & (1 << n) != 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{HEIGHT, PX_OFF, PX_ON, WIDTH, draw_sprite};
+
+    #[test]
+    fn draw_wraps_around_screen_edges() {
+        let mut framebuffer = [PX_OFF; WIDTH * HEIGHT];
+
+        assert_eq!(
+            draw_sprite(&mut framebuffer, 63, 31, &[0b1000_0001, 0b1000_0000]),
+            0
+        );
+
+        assert_eq!(framebuffer[31 * WIDTH + 63], PX_ON);
+        assert_eq!(framebuffer[31 * WIDTH + 6], PX_ON);
+        assert_eq!(framebuffer[63], PX_ON);
+    }
+
+    #[test]
+    fn drawing_over_set_pixels_erases_them_and_reports_collision() {
+        let mut framebuffer = [PX_OFF; WIDTH * HEIGHT];
+
+        assert_eq!(draw_sprite(&mut framebuffer, 10, 10, &[0b1100_0000]), 0);
+        assert_eq!(draw_sprite(&mut framebuffer, 10, 10, &[0b1100_0000]), 1);
+
+        assert_eq!(framebuffer[10 * WIDTH + 10], PX_OFF);
+        assert_eq!(framebuffer[10 * WIDTH + 11], PX_OFF);
+    }
 }
