@@ -117,9 +117,7 @@ impl Cpu {
                 self.i = nnn;
                 ProgramCounter::Next
             }
-            _ => {
-                panic!("Unknown opcode: {opcode:04X}");
-            }
+            _ => ProgramCounter::Next,
         };
 
         match pc_change {
