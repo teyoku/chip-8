@@ -63,6 +63,13 @@ impl Window {
             .unwrap_or(false)
     }
 
+    pub fn pressed_chip8_key(&self) -> Option<u8> {
+        self.handle_key_events()
+            .iter()
+            .position(|pressed| *pressed)
+            .map(|key| key as u8)
+    }
+
     pub fn is_key_down(&self, key: Key) -> bool {
         self.is_key_down(key)
     }
