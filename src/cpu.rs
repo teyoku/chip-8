@@ -61,13 +61,11 @@ impl Cpu {
                 ProgramCounter::Jump(nnn)
             }
             // 3XNN - skip if Vx == NN
-            (0x3, _, _, _) => {
-                ProgramCounter::skip_if(self.v[x] == nn)
-            }
+            (0x3, _, _, _) => ProgramCounter::skip_if(self.v[x] == nn),
             // 4XNN - skip if Vx != NN
-            (0x4, _, _, _) => {
-                ProgramCounter::skip_if(self.v[x] != nn)
-            }
+            (0x4, _, _, _) => ProgramCounter::skip_if(self.v[x] != nn),
+            // 5XY0 - skip if Vx == Vy
+            (0x5, _, _, 0x0) => ProgramCounter::skip_if(self.v[x] == self.v[y]),
             // 6XNN - write NN to VX
             (0x6, _, _, _) => {
                 self.v[x] = nn;
@@ -76,6 +74,21 @@ impl Cpu {
             // 7XNN - add NN to VX
             (0x7, _, _, _) => {
                 self.v[x] = self.v[x].wrapping_add(nn);
+                ProgramCounter::Next
+            }
+            // 8XY0 - Set Vy to Vx
+            (0x8, _, _, 0x0) => {
+                self.v[x] = self.v[y];
+                ProgramCounter::Next
+            }
+            // 8XY1 - Set Vx OR Vy to Vx
+            (0x8, _, _, 0x1) => {
+                self.v[x] |= self.v[y];
+                ProgramCounter::Next
+            }
+            // 8XY0 - Set Vx OR Vy to Vx
+            (0x8, _, _, 0x2) => {
+                self.v[x] &= self.v[y];
                 ProgramCounter::Next
             }
             // ANNN - load NNN into I
