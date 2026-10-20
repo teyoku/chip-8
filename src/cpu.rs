@@ -1,4 +1,4 @@
-use crate::{chip8::PROGRAM_START, memory::Memory};
+use crate::{chip8::PROGRAM_START, memory::Memory, window::Window};
 
 const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
@@ -39,7 +39,7 @@ impl Cpu {
         }
     }
 
-    pub fn execute(&mut self, opcode: u16, memory: &mut Memory) {
+    pub fn execute(&mut self, opcode: u16, memory: &mut Memory, window: &mut Window) {
         let c = ((opcode & 0xF000) >> 12) as u8; // Instruction category
         let x = (opcode & 0x0F00 >> 8) as usize; // Vx register index
         let y = (opcode & 0x00F0 >> 4) as usize; // Vy register index
@@ -49,6 +49,16 @@ impl Cpu {
         let nnn = opcode & 0x0FFF; // 12-bit memory address
 
         let pc_change = match (c, x, y, n) {
+            // 00E0 - clear the display
+            (0x00, 0x00, 0x0e, 0x00) => {
+                window.clear();
+                ProgramCounter::Next
+            }
+            // 00EE - return from subroutine
+            (0x00, 0x00, 0x0e, 0x0e) => {
+                self.sp -= 1;
+                ProgramCounter::Jump(self.stack[self.sp as usize])
+            }
             // 1NNN - goto NNN
             (0x1, _, _, _) => ProgramCounter::Jump(nnn),
             // 2NNN - call NNN
