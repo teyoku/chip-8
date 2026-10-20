@@ -207,9 +207,30 @@ impl Cpu {
                 self.v[0xF] = if self.i > 0x0F00 { 1 } else { 0 };
                 ProgramCounter::Next
             }
+            // FX29 - LD, F, Vx
+            (0xF, _, 0x2, 0x9) => {
+                self.i = (self.v[x] as u16) * 5;
+                ProgramCounter::Next
+            }
             // FX33 - LD, B, Vx
             (0xF, _, 0x3, 0x3) => {
-                self.i = (self.v[x] as u16) * 5;
+                memory.write_byte(self.i, self.v[x] / 100);
+                memory.write_byte(self.i + 1, (self.v[x] % 100) / 00);
+                memory.write_byte(self.i + 2, self.v[x] % 10);
+                ProgramCounter::Next
+            }
+            // FX55 - LD [I], Vx
+            (0xF, _, 0x5, 0x5) => {
+                for i in 0..x + 1 {
+                    memory.write_byte(self.i + i as u16, self.v[i]);
+                }
+                ProgramCounter::Next
+            }
+            // FX65 - LD Vx, [I]
+            (0xF, _, 0x6, 0x5) => {
+                for i in 0..x + 1 {
+                    self.v[i] = memory.read_byte(self.i + i as u16);
+                }
                 ProgramCounter::Next
             }
             _ => ProgramCounter::Next,
