@@ -11,6 +11,7 @@ use crate::{
 
 pub const PROGRAM_START: usize = 0x200;
 const TIMER_TICK: Duration = Duration::from_nanos(16_666_667);
+const CPU_CYCLES_PER_FRAME: usize = 10;
 
 pub struct Chip8 {
     memory: Memory,
@@ -32,7 +33,7 @@ impl Chip8 {
     }
 
     pub fn load_rom(&mut self, data: &[u8]) -> Result<(), &str> {
-        if PROGRAM_START + data.len() >= MEMORY_SIZE {
+        if PROGRAM_START + data.len() > MEMORY_SIZE {
             return Err("Out of memory: program too large");
         }
 
@@ -44,11 +45,19 @@ impl Chip8 {
         Ok(())
     }
 
-    pub fn run(&mut self) {
-        self.update_timers();
-        let opcode = self.fetch_opcode();
+    pub fn run(&mut self) -> Result<(), minifb::Error> {
+        for _ in 0..CPU_CYCLES_PER_FRAME {
+            self.update_timers();
+            let opcode = self.fetch_opcode();
 
-        self.cpu.execute(opcode, &mut self.memory, &mut self.window);
+            self.cpu.execute(opcode, &mut self.memory, &mut self.window);
+        }
+
+        self.window.refresh()
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.window.is_open()
     }
 
     fn update_timers(&mut self) {
