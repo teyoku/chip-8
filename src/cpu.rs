@@ -86,9 +86,14 @@ impl Cpu {
                 self.v[x] |= self.v[y];
                 ProgramCounter::Next
             }
-            // 8XY0 - Set Vx OR Vy to Vx
+            // 8XY2 - Set Vx OR Vy to Vx
             (0x8, _, _, 0x2) => {
                 self.v[x] &= self.v[y];
+                ProgramCounter::Next
+            }
+            // 8XY3 - Set Vx XOR Vy to Vx
+            (0x8, _, _, 0x3) => {
+                self.v[x] ^= self.v[y];
                 ProgramCounter::Next
             }
             // ANNN - load NNN into I
